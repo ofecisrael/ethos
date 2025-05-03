@@ -10,6 +10,8 @@
 #include <unistd.h>
 #include <iomanip>
 #include <iostream>
+#include <chrono>
+#include <ctime>   // for clock() and CLOCKS_PER_SEC
 
 #include "base/check.h"
 #include "base/output.h"
@@ -20,6 +22,8 @@ using namespace ethos;
 
 int main( int argc, char* argv[] )
 {
+  auto total_start = std::chrono::steady_clock::now();
+
   Options opts;
   // read the options
   size_t i = 1;
@@ -146,6 +150,10 @@ int main( int argc, char* argv[] )
   Stats stats;
   State s(opts, stats);
   Plugin* plugin = nullptr;
+  // measure the time it takes to parse the file
+  //auto start = std::chrono::high_resolution_clock::now();
+  auto start = std::chrono::steady_clock::now();
+
   for (size_t i=0, nincludes=includes.size(); i<nincludes; i++)
   {
     std::string file = includes[i].first;
@@ -157,6 +165,23 @@ int main( int argc, char* argv[] )
       EO_FATAL() << "Error: cannot include file " << file;
     }
   }
+  // Stop measuring time
+  //auto end = std::chrono::high_resolution_clock::now();
+  auto end = std::chrono::steady_clock::now();
+
+
+  // Calculate duration in milliseconds
+  //std::chrono::duration<double, std::milli> duration = end - start;
+  // Write result to file
+  /*
+  std::ofstream outFile("timing.csv");
+  if (outFile.is_open()) {
+      outFile << "include," << duration.count() << std::endl;
+      outFile.close();
+  } else {
+      std::cerr << "Failed to open file for writing.\n";
+  }
+*/
   // NOTE: initialization of plugin goes here
   if (plugin!=nullptr)
   {
@@ -214,6 +239,12 @@ int main( int argc, char* argv[] )
   {
     std::cout << stats.toString(s, opts.d_statsCompact, opts.d_statsAll);
   }
+  auto total_end = std::chrono::steady_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+  auto total_duration = std::chrono::duration_cast<std::chrono::microseconds>(total_end - total_start);
+  std::cout << "include_time=" << duration.count() << std::endl;
+  std::cout << "total_time=" << total_duration.count() << std::endl;
+
   // exit immediately, which avoids deleting all expressions which can take time
   exit(0);
   return 0;
