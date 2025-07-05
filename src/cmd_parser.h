@@ -52,6 +52,8 @@ class CmdParser
   bool d_isFinished;
   /** Stats enabled? */
   bool d_statsEnabled;
+  /** Is first command */
+  bool d_isFirstCommand;
 };
 
 }  // namespace ethos

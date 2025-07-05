@@ -26,7 +26,7 @@ CmdParser::CmdParser(Lexer& lex,
                      ExprParser& eparser,
                      bool isReference)
     : d_lex(lex), d_state(state), d_sts(state.getStats()),
-      d_eparser(eparser), d_isReference(isReference), d_isFinished(false)
+      d_eparser(eparser), d_isReference(isReference), d_isFinished(false), d_isFirstCommand(true)
 {
   // initialize the command tokens
   // commands supported in both inputs and proofs
@@ -95,9 +95,15 @@ Token CmdParser::nextCommandToken()
 
 bool CmdParser::parseNextCommand()
 {
-  // if we are at the end of file, return the null command
-  if (d_isFinished || d_lex.eatTokenChoice(Token::EOF_TOK, Token::LPAREN))
+  if (d_isFirstCommand)
   {
+    d_isFirstCommand = false;
+    d_lex.eatToken(Token::LPAREN);
+  }
+  // if we are at the end of file, return the null command
+  if (d_isFinished || d_lex.eatTokenChoice(Token::RPAREN, Token::LPAREN))
+  {
+    d_lex.eatToken(Token::EOF_TOK);
     return false;
   }
   Token tok = nextCommandToken();
